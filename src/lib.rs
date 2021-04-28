@@ -1,4 +1,5 @@
 pub mod parser;
+pub mod tuple;
 
 #[cfg(test)]
 mod tests {
