@@ -4,6 +4,15 @@ use std::marker::PhantomData;
 
 pub trait SSParser<CF> {
     fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, _: &CF) -> ParseRes<'a, ()>;
+
+    fn ss_convert<'a>(&self, s: &'a str, cf: &CF) -> Result<String, PErr<'a>> {
+        let mut res = String::new();
+        let it = PIter::new(s);
+        match self.ss_parse(&it, &mut res, cf) {
+            Ok(_) => Ok(res),
+            Err(e) => Err(e),
+        }
+    }
 }
 
 pub struct SS<P: OParser<T>, T>(P, PhantomData<T>);
@@ -23,7 +32,7 @@ impl<P: OParser<T>, T, CF> SSParser<CF> for SS<P, T> {
     }
 }
 
-pub struct Put<T: Display>(T);
+pub struct Put<T: Display>(pub T);
 
 impl<T: Display, CF> SSParser<CF> for Put<T> {
     fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, _: &CF) -> ParseRes<'a, ()> {
