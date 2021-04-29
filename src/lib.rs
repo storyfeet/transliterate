@@ -1,6 +1,7 @@
 #[macro_use]
 pub mod macros;
 
+pub mod bo_imports;
 pub mod parser;
 pub mod tuple;
 
@@ -14,9 +15,13 @@ mod tests {
         (Put("__"),ss("Hello"),Put("__"))
     }
 
+    ss_parser! { Car ,
+        (sskip("* ".istar()),Put("("),ss("abcdr".istar()),sskip("* ".istar()),Put(")"))
+    }
+
     #[test]
     fn it_works() {
-        //let p = (Put("__"), ss("Hello"), Put("__"));
         assert_eq!(Catter.ss_convert("Hello", &()).unwrap(), "__Hello__");
+        assert_eq!(Car.ss_convert("*  * car*  * ", &()).unwrap(), "(car)");
     }
 }

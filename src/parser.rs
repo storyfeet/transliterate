@@ -40,3 +40,18 @@ impl<T: Display, CF> SSParser<CF> for Put<T> {
         Ok((i.clone(), (), None))
     }
 }
+
+pub struct SSkip<P: OParser<T>, T>(P, PhantomData<T>);
+
+pub fn sskip<P: OParser<T>, T>(p: P) -> SSkip<P, T> {
+    SSkip(p, PhantomData)
+}
+
+impl<P: OParser<T>, T, CF> SSParser<CF> for SSkip<P, T> {
+    fn ss_parse<'a>(&self, i: &PIter<'a>, _: &mut String, _: &CF) -> ParseRes<'a, ()> {
+        match self.0.parse(i) {
+            Ok((i2, _, e)) => Ok((i2, (), e)),
+            Err(e) => Err(e),
+        }
+    }
+}
