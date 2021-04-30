@@ -2,11 +2,11 @@ use crate::parser::*;
 use bogobble::*;
 
 impl<CF> SSParser<CF> for EOI {
-    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) {
-        let i2 = it.clone();
+    fn ss_parse<'a>(&self, it: &PIter<'a>, _: &mut String, _: &CF) -> ParseRes<'a, ()> {
+        let mut i2 = it.clone();
         if i2.next() == None {
             return Ok((i2, (), None));
         }
-        i.err_r(Expected::EOI)
+        it.err_r(Expected::EOI)
     }
 }
