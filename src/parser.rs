@@ -2,7 +2,7 @@ use bogobble::*;
 use std::fmt::Display;
 use std::marker::PhantomData;
 
-pub trait SSParser<CF> {
+pub trait SSParser<CF>: Sized {
     fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, _: &CF) -> ParseRes<'a, ()>;
 
     fn ss_convert<'a>(&self, s: &'a str, cf: &CF) -> Result<String, PErr<'a>> {
@@ -14,6 +14,14 @@ pub trait SSParser<CF> {
         }
     }
 }
+
+pub trait SSOrer: Sized {
+    fn ss_or<B>(self, b: B) -> SSOR<Self, B> {
+        SSOR(self, b)
+    }
+}
+
+impl<T: Sized> SSOrer for T {}
 
 pub struct SS<P: OParser<T>, T>(P, PhantomData<T>);
 
@@ -52,6 +60,22 @@ impl<P: OParser<T>, T, CF> SSParser<CF> for SSkip<P, T> {
         match self.0.parse(i) {
             Ok((i2, _, e)) => Ok((i2, (), e)),
             Err(e) => Err(e),
+        }
+    }
+}
+
+pub struct SSOR<A, B>(A, B);
+
+impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for SSOR<A, B> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> ParseRes<'a, ()> {
+        match self.0.ss_parse(it, res, cf) {
+            Ok((r, v, e)) => Ok((r, v, e)),
+            Err(e) if e.is_break => Err(e),
+            Err(e) => match self.1.ss_parse(it, res, cf) {
+                Ok((r, v, ex)) => Ok((r, v, ex)),
+                Err(e2) if e2.is_break => Err(e2),
+                Err(e2) => Err(e.longer(e2)),
+            },
         }
     }
 }

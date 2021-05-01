@@ -20,3 +20,22 @@ macro_rules! ss_parser {
         }
     };
 }
+
+#[macro_export]
+macro_rules! ss_or{
+    ($s:expr,$($x:expr),* $(,)?) => { $s$(.ss_or($x))*;};
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::parser::*;
+    #[test]
+    pub fn can_ss_or() {
+        let a = ss_or!("cat", "dog", "car");
+        /*       assert_eq!(
+            ss_or!("cat", "dog", "car",).ss_convert("catdogman ", &()),
+            Ok("cat".to_string())
+        );*/
+    }
+}

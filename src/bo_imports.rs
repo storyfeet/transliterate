@@ -25,5 +25,26 @@ impl<CF> SSParser<CF> for &'static str {
 }
 
 impl<CF, P: SSParser<CF>> SSParser<CF> for KeyWord<P> {
-    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> ParseRes<'a, ()> {}
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> ParseRes<'a, ()> {
+        (BRP(self), FailOn(ss((Alpha, NumDigit, '_').one()))).ss_parse(it, res, cf)
+    }
+}
+
+impl<'b, CF, P: SSParser<CF>> SSParser<CF> for BRP<'b, P> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> ParseRes<'a, ()> {
+        self.0.ss_parse(it, res, cf)
+    }
+}
+
+impl<CF, P: SSParser<CF>> SSParser<CF> for FailOn<P> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> ParseRes<'a, ()> {
+        let rpos = res.len();
+        match self.0.ss_parse(&it, res, cf) {
+            Ok((_, _, _)) => it.err_rs("Failon Succeeded"),
+            Err(_) => {
+                res.replace_range(rpos.., "");
+                Ok((it.clone(), (), None))
+            }
+        }
+    }
 }
