@@ -1,6 +1,7 @@
 #[macro_use]
 pub mod macros;
 
+pub mod bo_char;
 pub mod bo_imports;
 pub mod parser;
 pub mod tuple;

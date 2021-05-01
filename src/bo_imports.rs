@@ -48,3 +48,9 @@ impl<CF, P: SSParser<CF>> SSParser<CF> for FailOn<P> {
         }
     }
 }
+
+impl<CF, P: SSParser<CF>> SSParser<CF> for WS_<P> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> ParseRes<'a, ()> {
+        (WS.istar(), BRP(&self.p)).ss_parse(it, res, cf)
+    }
+}
