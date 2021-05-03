@@ -3,6 +3,7 @@ pub mod macros;
 
 pub mod bo_char;
 pub mod bo_imports;
+pub mod bo_part;
 pub mod parser;
 pub mod tuple;
 
