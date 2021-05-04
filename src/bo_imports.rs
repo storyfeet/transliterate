@@ -11,19 +11,6 @@ impl<CF> SSParser<CF> for EOI {
     }
 }
 
-impl<CF> SSParser<CF> for &'static str {
-    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
-        let mut i2 = it.clone();
-        for x in self.chars() {
-            if i2.next() != Some(x) {
-                return i2.err_rs(self);
-            }
-        }
-        res.push_str(self);
-        Ok((i2, None))
-    }
-}
-
 impl<CF, P: SSParser<CF>> SSParser<CF> for KeyWord<P> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
         (BRP(self), FailOn(ss((Alpha, NumDigit, '_').one()))).ss_parse(it, res, cf)
@@ -68,6 +55,24 @@ impl<CF, P: SSParser<CF>> SSParser<CF> for Maybe<P> {
             Err(_) => {
                 res.replace_range(rp.., "");
                 Ok((it.clone(), None))
+            }
+        }
+    }
+}
+
+impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PlusUntil<A, B> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
+        let n = 0;
+        let (i2, _) = self.0.ss_parse(it, res, cf)?;
+        loop {
+            let rpos = res.len();
+            let exp = match self.1.ss_parse(it, res, cf)? {
+                Ok(v) => return Ok(v),
+                Err(c) => c,
+            };
+            res.truncate(rpos);
+            match self.0.ss_parse(it,res,cf) {
+                //TODO
             }
         }
     }

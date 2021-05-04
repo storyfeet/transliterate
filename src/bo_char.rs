@@ -17,14 +17,31 @@ impl<CF, CB: CharBool> SSParser<CF> for ICharStar<CB> {
         let mut i1 = it.clone();
         let mut i2 = it.clone();
         while let Some(c) = i2.next() {
-            if self.cb.char_bool(c) {
+            if self.0.char_bool(c) {
                 i1 = i2;
                 i2 = it.clone();
             } else {
-                let e = i1.err(self.cb.expected());
+                let e = i1.err(self.0.expected());
                 return Ok((i1, Some(e)));
             }
         }
-        Ok((i2, Some(i1.err(self.cb.expected()))))
+        Ok((i2, Some(i1.err(self.0.expected()))))
+    }
+}
+
+impl<CF, CB: CharBool> SSParser<CF> for ICharPlus<CB> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, _: &mut String, _: &CF) -> SSRes<'a> {
+        let mut i1 = it.clone();
+        let mut i2 = it.clone();
+        while let Some(c) = i2.next() {
+            if self.0.char_bool(c) {
+                i1 = i2;
+                i2 = it.clone();
+            } else {
+                let e = i1.err(self.0.expected());
+                return Ok((i1, Some(e)));
+            }
+        }
+        Ok((i2, Some(i1.err(self.0.expected()))))
     }
 }
