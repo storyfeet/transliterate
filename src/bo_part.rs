@@ -51,3 +51,46 @@ impl<CF, P: SSParser<CF>> SSParser<CF> for PStar<P> {
         }
     }
 }
+
+pub struct PKeyWord(pub &'static str);
+
+impl<CF> SSParser<CF> for PKeyWord {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
+        let mut i2 = it.clone();
+        for c in self.0.chars() {
+            match i2.next() {
+                Some(n) if c == n => {}
+                Some(_) => return it.err_rs(self.0),
+                None => {
+                    res.push_str(it.str_to(None));
+                    return Ok((i2, None));
+                }
+            }
+        }
+        res.push_str(it.str_to(i2.index()));
+        Ok((i2, None))
+    }
+}
+
+pub struct PStarUntil<A, B>(pub A, pub B);
+
+impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PStarUntil<A, B> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
+        let mut i2 = it.clone();
+        loop {
+            if i2.eoi() {
+                return Ok((i2, None));
+            }
+            let rpos = res.len();
+            let e = match self.1.ss_parse(&i2, res, cf) {
+                Ok(v) => return Ok(v),
+                Err(e) => e,
+            };
+            res.truncate(rpos);
+            match self.0.ss_parse(&i2, res, cf) {
+                Ok((v, _)) => i2 = v,
+                Err(ea) => return Err(ea.join(e)),
+            }
+        }
+    }
+}

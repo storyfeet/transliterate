@@ -13,9 +13,9 @@ impl<CF> SSParser<CF> for EOI {
 
 impl<CF, P: SSParser<CF>> SSParser<CF> for KeyWord<P> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
-        println!("PRE Keyword res = {}\r", res);
+        //println!("PRE Keyword res = {}\r", res);
         let r = (BRP(&self.0), FailOn((Alpha, NumDigit, '_').one())).ss_parse(it, res, cf);
-        println!("POST Keyword res = {}\r", res);
+        //println!("POST Keyword res = {}\r", res);
         r
     }
 }

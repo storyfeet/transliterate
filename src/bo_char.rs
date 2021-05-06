@@ -17,8 +17,7 @@ fn do_char_star<'a, CB: CharBool>(p: &CB, it: &PIter<'a>) -> SSRes<'a> {
     let mut i2 = it.clone();
     while let Some(c) = i2.next() {
         if p.char_bool(c) {
-            i1 = i2;
-            i2 = it.clone();
+            i1 = i2.clone();
         } else {
             let e = i1.err(p.expected());
             return Ok((i1, Some(e)));
