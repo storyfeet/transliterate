@@ -58,21 +58,3 @@ impl<
         self.5.ss_parse(&i2, res, cf).join_err_op(e)
     }
 }
-
-impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for Or<A, B> {
-    fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
-        let rpos = res.len();
-        match self.a.ss_parse(i, res, cf) {
-            Err(e) if e.is_break => Err(e),
-            Err(e) => {
-                res.replace_range(rpos.., "");
-                match self.b.ss_parse(i, res, cf) {
-                    Err(e2) if e2.is_break => Err(e2),
-                    Err(e2) => Err(e2.longer(e)),
-                    v => v,
-                }
-            }
-            v => v,
-        }
-    }
-}

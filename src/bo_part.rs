@@ -13,12 +13,15 @@ impl<CF, P: SSParser<CF>> SSParser<CF> for PPlus<P> {
             }
             match self.0.ss_parse(&i2, res, cf) {
                 Ok((i3, _)) => {
+                    if i3.index() == i2.index() {
+                        return i2.err_rs("No Progression in PPlus");
+                    }
                     i2 = i3;
                     n += 1;
                 }
                 Err(e) => {
                     if n > 0 {
-                        res.replace_range(rpos.., "");
+                        res.truncate(rpos);
                         return Ok((i2, Some(e)));
                     }
                     return Err(e);
@@ -41,7 +44,7 @@ impl<CF, P: SSParser<CF>> SSParser<CF> for PStar<P> {
                     i2 = i3;
                 }
                 Err(e) => {
-                    res.replace_range(rpos.., "");
+                    res.truncate(rpos);
                     return Ok((i2, Some(e)));
                 }
             }

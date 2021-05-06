@@ -12,11 +12,18 @@ pub trait SSErr<'a>: Sized {
             None => self,
         }
     }
+    fn put(self, res: &mut String, it: &PIter) -> Self;
 }
 
 impl<'a> SSErr<'a> for SSRes<'a> {
     fn join_err(self, e2: PErr<'a>) -> Self {
         self.map_err(|e| e.join(e2))
+    }
+    fn put(self, res: &mut String, it: &PIter) -> Self {
+        if let Ok((i, _)) = &self {
+            res.push_str(it.str_to(i.index()));
+        }
+        self
     }
 }
 
@@ -46,6 +53,7 @@ pub struct SS<P: OParser<T>, T>(P, PhantomData<T>);
 pub fn ss<P: OParser<T>, T>(p: P) -> SS<P, T> {
     SS(p, PhantomData)
 }
+
 impl<P: OParser<T>, T, CF> SSParser<CF> for SS<P, T> {
     fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         match self.0.parse(i) {
@@ -86,14 +94,27 @@ pub struct SSOR<A, B>(A, B);
 
 impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for SSOR<A, B> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
+        let pos = res.len();
         match self.0.ss_parse(it, res, cf) {
             Ok((r, e)) => Ok((r, e)),
             Err(e) if e.is_break => Err(e),
-            Err(e) => match self.1.ss_parse(it, res, cf) {
-                Ok((r, ex)) => Ok((r, ex)),
-                Err(e2) if e2.is_break => Err(e2),
-                Err(e2) => Err(e.longer(e2)),
-            },
+            Err(e) => {
+                res.truncate(pos);
+                match self.1.ss_parse(it, res, cf) {
+                    Ok((r, ex)) => Ok((r, ex)),
+                    Err(e2) if e2.is_break => Err(e2),
+                    Err(e2) => Err(e.longer(e2)),
+                }
+            }
         }
+    }
+}
+
+pub struct SSDebug(pub &'static str);
+
+impl<CF> SSParser<CF> for SSDebug {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, _: &mut String, _: &CF) -> SSRes<'a> {
+        println!("SS DEBUG: {}", self.0);
+        Ok((it.clone(), None))
     }
 }
