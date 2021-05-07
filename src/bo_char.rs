@@ -3,10 +3,13 @@ use bogobble::charbool::*;
 use bogobble::traits::*;
 
 impl<CF, CB: CharBool + Sized> SSParser<CF> for OneChar<CB> {
-    fn ss_parse<'a>(&self, it: &PIter<'a>, _: &mut String, _: &CF) -> SSRes<'a> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         match i2.next() {
-            Some(c) if self.cb.char_bool(c) => Ok((i2, None)),
+            Some(c) if self.cb.char_bool(c) => {
+                res.push(c);
+                Ok((i2, None))
+            }
             _ => it.err_r(self.cb.expected()),
         }
     }
