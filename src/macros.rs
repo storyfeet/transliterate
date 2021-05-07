@@ -45,6 +45,11 @@ macro_rules! ss_or{
     ($s:expr,$($x:expr),* $(,)?) => { $s$(.ss_or($x))*;};
 }
 
+#[macro_export]
+macro_rules! pl{
+    ($s:expr,$($x:expr),* $(,)?) => { $s$(.p_then($x))*;};
+}
+
 #[cfg(test)]
 mod tests {
     use crate::parser::*;

@@ -67,8 +67,17 @@ impl<CF> SSParser<CF> for PKeyWord {
                 }
             }
         }
-        res.push_str(it.str_to(i2.index()));
-        Ok((i2, None))
+        let mut i3 = i2.clone();
+        use bogobble::*;
+        match i3.next() {
+            Some(c) if (Alpha, NumDigit, '_').char_bool(c) => {
+                return i2.err_rs(self.0);
+            }
+            _ => {
+                res.push_str(it.str_to(i2.index()));
+                Ok((i2, None))
+            }
+        }
     }
 }
 

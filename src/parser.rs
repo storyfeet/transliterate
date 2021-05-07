@@ -1,3 +1,4 @@
+use crate::tuple::PartThen;
 use bogobble::*;
 use std::fmt::Display;
 use std::marker::PhantomData;
@@ -43,6 +44,9 @@ pub trait SSParser<CF>: Sized {
 pub trait SSOrer: Sized {
     fn ss_or<B>(self, b: B) -> SSOR<Self, B> {
         SSOR(self, b)
+    }
+    fn p_then<B>(self, b: B) -> PartThen<Self, B> {
+        PartThen(self, b)
     }
 }
 
@@ -114,7 +118,8 @@ pub struct SSDebug(pub &'static str);
 
 impl<CF> SSParser<CF> for SSDebug {
     fn ss_parse<'a>(&self, it: &PIter<'a>, _: &mut String, _: &CF) -> SSRes<'a> {
-        println!("SS DEBUG: {}", self.0);
+        let (l, c) = it.lc();
+        println!("SS DEBUG (l{},c{}): {}, ", l, c, self.0);
         Ok((it.clone(), None))
     }
 }

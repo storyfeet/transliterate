@@ -58,3 +58,15 @@ impl<
         self.5.ss_parse(&i2, res, cf).join_err_op(e)
     }
 }
+
+pub struct PartThen<A, B>(pub A, pub B);
+
+impl<A: SSParser<CF>, B: SSParser<CF>, CF> SSParser<CF> for PartThen<A, B> {
+    fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
+        let (i2, e) = self.0.ss_parse(i, res, cf)?;
+        if i2.eoi() {
+            return Ok((i2, e));
+        }
+        self.1.ss_parse(&i2, res, cf).join_err_op(e)
+    }
+}
