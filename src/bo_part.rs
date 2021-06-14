@@ -103,3 +103,73 @@ impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PStarUntil<A, B> {
         }
     }
 }
+
+pub struct PSepPlus<A, B>(pub A, pub B);
+impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PSepPlus<A, B> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
+        let mut i2 = it.clone();
+        loop {
+            if i2.eoi() {
+                return Ok((i2, None));
+            }
+            match self.0.ss_parse(&i2, res, cf) {
+                Ok((nx, _)) => i2 = nx,
+                Err(e) => return Err(e),
+            }
+            if i2.eoi() {
+                return Ok((i2, None));
+            }
+            match self.1.ss_parse(&i2, res, cf) {
+                Ok((nx, _)) => i2 = nx,
+                Err(e) => return Ok((i2, Some(e))),
+            }
+        }
+    }
+}
+
+pub struct PSepUntil<A, B, C>(pub A, pub B, pub C);
+impl<CF, A: SSParser<CF>, B: SSParser<CF>, C: SSParser<CF>> SSParser<CF> for PSepUntil<A, B, C> {
+    fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
+        let mut i2 = it.clone();
+        let mut e_end = Some(match self.2.ss_parse(&i2, res, cf) {
+            Ok(v) => return Ok(v),
+            Err(e) => e,
+        });
+        loop {
+            if i2.eoi() {
+                return Ok((i2, None));
+            }
+            match self.0.ss_parse(&i2, res, cf) {
+                Ok((v, _)) => i2 = v,
+                Err(e) => {
+                    return match e_end {
+                        Some(ee) => Err(e.join(ee)),
+                        None => Err(e),
+                    }
+                }
+            }
+            if i2.eoi() {
+                return Ok((i2, None));
+            }
+            e_end = match self.2.ss_parse(&i2, res, cf) {
+                Ok(v) => return Ok(v),
+                Err(e) => Some(e),
+            };
+            if i2.eoi() {
+                return Ok((i2, None));
+            }
+            e_end = match self.1.ss_parse(&i2, res, cf) {
+                Ok((v, e)) => {
+                    i2 = v;
+                    e
+                }
+                Err(e) => {
+                    return match e_end {
+                        Some(ee) => Err(e.join(ee)),
+                        None => Err(e),
+                    }
+                }
+            }
+        }
+    }
+}
