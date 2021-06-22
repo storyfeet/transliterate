@@ -2,7 +2,7 @@ use crate::parser::*;
 use bogobble::partial::*;
 use bogobble::traits::*;
 
-impl<CF, P: SSParser<CF>> SSParser<CF> for PPlus<P> {
+impl<CF: BackTo, P: SSParser<CF>> SSParser<CF> for PPlus<P> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         let mut n = 0;
@@ -31,7 +31,7 @@ impl<CF, P: SSParser<CF>> SSParser<CF> for PPlus<P> {
     }
 }
 
-impl<CF, P: SSParser<CF>> SSParser<CF> for PStar<P> {
+impl<CF: BackTo, P: SSParser<CF>> SSParser<CF> for PStar<P> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         loop {
@@ -54,7 +54,7 @@ impl<CF, P: SSParser<CF>> SSParser<CF> for PStar<P> {
 
 pub struct PKeyWord(pub &'static str);
 
-impl<CF> SSParser<CF> for PKeyWord {
+impl<CF: BackTo> SSParser<CF> for PKeyWord {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         for c in self.0.chars() {
@@ -83,7 +83,7 @@ impl<CF> SSParser<CF> for PKeyWord {
 
 pub struct PStarUntil<A, B>(pub A, pub B);
 
-impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PStarUntil<A, B> {
+impl<CF: BackTo, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PStarUntil<A, B> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         loop {
@@ -105,7 +105,7 @@ impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PStarUntil<A, B> {
 }
 
 pub struct PSepPlus<A, B>(pub A, pub B);
-impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PSepPlus<A, B> {
+impl<CF: BackTo, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PSepPlus<A, B> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         loop {
@@ -128,7 +128,9 @@ impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for PSepPlus<A, B> {
 }
 
 pub struct PSepUntil<A, B, C>(pub A, pub B, pub C);
-impl<CF, A: SSParser<CF>, B: SSParser<CF>, C: SSParser<CF>> SSParser<CF> for PSepUntil<A, B, C> {
+impl<CF: BackTo, A: SSParser<CF>, B: SSParser<CF>, C: SSParser<CF>> SSParser<CF>
+    for PSepUntil<A, B, C>
+{
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         let mut e_end = Some(match self.2.ss_parse(&i2, res, cf) {

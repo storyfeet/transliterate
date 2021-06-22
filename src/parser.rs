@@ -16,6 +16,12 @@ pub trait SSErr<'a>: Sized {
     fn put(self, res: &mut String, it: &PIter) -> Self;
 }
 
+pub trait BackTo {
+    fn back(&self, _: usize) {}
+}
+
+impl BackTo for () {}
+
 impl<'a> SSErr<'a> for SSRes<'a> {
     fn join_err(self, e2: PErr<'a>) -> Self {
         self.map_err(|e| e.join(e2))
@@ -28,7 +34,7 @@ impl<'a> SSErr<'a> for SSRes<'a> {
     }
 }
 
-pub trait SSParser<CF>: Sized {
+pub trait SSParser<CF: BackTo>: Sized {
     fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a>;
 
     fn ss_convert<'a>(&self, s: &'a str, cf: &CF) -> Result<String, PErr<'a>> {
@@ -58,7 +64,7 @@ pub fn ss<P: OParser<T>, T>(p: P) -> SS<P, T> {
     SS(p, PhantomData)
 }
 
-impl<P: OParser<T>, T, CF> SSParser<CF> for SS<P, T> {
+impl<P: OParser<T>, T, CF: BackTo> SSParser<CF> for SS<P, T> {
     fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         match self.0.parse(i) {
             Ok((i2, _, e)) => {
@@ -72,7 +78,7 @@ impl<P: OParser<T>, T, CF> SSParser<CF> for SS<P, T> {
 
 pub struct Put<T: Display>(pub T);
 
-impl<T: Display, CF> SSParser<CF> for Put<T> {
+impl<T: Display, CF: BackTo> SSParser<CF> for Put<T> {
     fn ss_parse<'a>(&self, i: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         res.push_str(&self.0.to_string());
         Ok((i.clone(), None))
@@ -85,7 +91,7 @@ pub fn sskip<P: OParser<T>, T>(p: P) -> SSkip<P, T> {
     SSkip(p, PhantomData)
 }
 
-impl<P: OParser<T>, T, CF> SSParser<CF> for SSkip<P, T> {
+impl<P: OParser<T>, T, CF: BackTo> SSParser<CF> for SSkip<P, T> {
     fn ss_parse<'a>(&self, i: &PIter<'a>, _: &mut String, _: &CF) -> SSRes<'a> {
         match self.0.parse(i) {
             Ok((i2, _, e)) => Ok((i2, e)),
@@ -96,13 +102,14 @@ impl<P: OParser<T>, T, CF> SSParser<CF> for SSkip<P, T> {
 
 pub struct SSOR<A, B>(A, B);
 
-impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for SSOR<A, B> {
+impl<CF: BackTo, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for SSOR<A, B> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, cf: &CF) -> SSRes<'a> {
         let pos = res.len();
         match self.0.ss_parse(it, res, cf) {
             Ok((r, e)) => Ok((r, e)),
             Err(e) if e.is_break => Err(e),
             Err(e) => {
+                cf.back(pos);
                 res.truncate(pos);
                 match self.1.ss_parse(it, res, cf) {
                     Ok((r, ex)) => Ok((r, ex)),
@@ -116,7 +123,7 @@ impl<CF, A: SSParser<CF>, B: SSParser<CF>> SSParser<CF> for SSOR<A, B> {
 
 pub struct SSDebug(pub &'static str);
 
-impl<CF> SSParser<CF> for SSDebug {
+impl<CF: BackTo> SSParser<CF> for SSDebug {
     fn ss_parse<'a>(&self, it: &PIter<'a>, _: &mut String, _: &CF) -> SSRes<'a> {
         let (l, c) = it.lc();
         println!("SS DEBUG (l{},c{}): {}, ", l, c, self.0);

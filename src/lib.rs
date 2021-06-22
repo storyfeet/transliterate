@@ -16,11 +16,11 @@ mod tests {
     use crate::parser::*;
     use bogobble::*;
 
-    ss_parser! { Catter ,
+    ss_parser! { Catter: BackTo ,
         (Put("__"),ss("Hello"),Put("__"))
     }
 
-    ss_parser! { Car ,
+    ss_parser! { Car:BackTo ,
         (sskip("* ".istar()),Put("("),ss("abcdr".istar()),sskip("* ".istar()),Put(")"))
     }
 

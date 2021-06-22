@@ -1,7 +1,7 @@
 use crate::parser::*;
 use bogobble::*;
 
-impl<CF> SSParser<CF> for &'static str {
+impl<CF: BackTo> SSParser<CF> for &'static str {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         for x in self.chars() {
@@ -14,7 +14,7 @@ impl<CF> SSParser<CF> for &'static str {
     }
 }
 
-impl<CF> SSParser<CF> for char {
+impl<CF: BackTo> SSParser<CF> for char {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         match i2.next().map(|c| *self == c) {

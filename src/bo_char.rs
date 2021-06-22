@@ -2,7 +2,7 @@ use crate::parser::*;
 use bogobble::charbool::*;
 use bogobble::traits::*;
 
-impl<CF, CB: CharBool + Sized> SSParser<CF> for OneChar<CB> {
+impl<CF: BackTo, CB: CharBool + Sized> SSParser<CF> for OneChar<CB> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         let mut i2 = it.clone();
         match i2.next() {
@@ -29,13 +29,13 @@ fn do_char_star<'a, CB: CharBool>(p: &CB, it: &PIter<'a>) -> SSRes<'a> {
     Ok((i2, Some(i1.err(p.expected()))))
 }
 
-impl<CF, CB: CharBool> SSParser<CF> for CharStar<CB> {
+impl<CF: BackTo, CB: CharBool> SSParser<CF> for CharStar<CB> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         do_char_star(&self.0, it).put(res, it)
     }
 }
 
-impl<CF, CB: CharBool> SSParser<CF> for CharPlus<CB> {
+impl<CF: BackTo, CB: CharBool> SSParser<CF> for CharPlus<CB> {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         let mut i1 = it.clone();
         let mut i2 = match i1.next() {
@@ -57,7 +57,7 @@ impl<CF, CB: CharBool> SSParser<CF> for CharPlus<CB> {
     }
 }
 
-impl<CF> SSParser<CF> for WS {
+impl<CF: BackTo> SSParser<CF> for WS {
     fn ss_parse<'a>(&self, it: &PIter<'a>, res: &mut String, _: &CF) -> SSRes<'a> {
         do_char_star(self, it).put(res, it)
     }
